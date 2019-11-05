@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, {useContext, useEffect} from 'react';
 import { Organisaatio, Koodi } from '../types';
 import OrganisaatioYhteystiedot from './OrganisaatioYhteystiedot';
 import OrganisaatioTiedot from './OrganisaatioTiedot';
@@ -21,6 +21,11 @@ type Props = {
 
 export default function RekisterointiOrganisaatio(props: Props) {
     const { i18n } = useContext(LanguageContext);
+
+    useEffect(() => {
+        console.log("Rendering RekisterointiOrganisaatio");
+    }, [props.organisaatio]);
+
     return (
         <form>
             <Fieldset title={i18n.translate('ORGANISAATION_TIEDOT')}
@@ -35,9 +40,9 @@ export default function RekisterointiOrganisaatio(props: Props) {
             <Fieldset title={i18n.translate('ORGANISAATION_YHTEYSTIEDOT')}
                       description={i18n.translate('ORGANISAATION_YHTEYSTIEDOT_KUVAUS')}>
                 <OrganisaatioYhteystiedot readOnly={!!props.initialOrganisaatio.oid}
-                                          initialOrganisaatio={props.initialOrganisaatio}
-                                          organisaatio={props.organisaatio}
-                                          setOrganisaatio={props.setOrganisaatio}
+                                          alkuperaisetYhteystiedot={props.initialOrganisaatio.yhteystiedot}
+                                          yhteystiedot={props.organisaatio.yhteystiedot}
+                                          paivitaOrganisaatio={props.setOrganisaatio}
                                           errors={props.errors} />
             </Fieldset>
             <Fieldset title={i18n.translate('ORGANISAATION_KUNNAT')}

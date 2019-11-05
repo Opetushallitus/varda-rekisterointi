@@ -1,7 +1,7 @@
 import React, { useState, useReducer, useContext } from 'react';
 import RekisterointiOrganisaatio from './RekisterointiOrganisaatio';
 import RekisterointiKayttaja from './RekisterointiKayttaja';
-import { Organisaatio, Kayttaja } from '../types';
+import {Organisaatio, Kayttaja} from '../types';
 import RekisterointiYhteenveto from './RekisterointiYhteenveto';
 import Axios from 'axios';
 import './Rekisterointi.css';
@@ -10,9 +10,26 @@ import Wizard from '../Wizard';
 import Navigation from './Navigation';
 import {KuntaKoodistoContext, LanguageContext} from '../contexts';
 import EmailValidator from 'email-validator';
-import { getYhteystietoArvo, isPuhelinnumero, toPuhelinnumero, isSahkoposti, toSahkoposti, isKayntiosoite, toOsoite, isPostiosoite, toPostinumeroUri, toPostitoimipaikka } from '../OrganisaatioYhteystietoUtils';
 import * as YtunnusValidator from '../YtunnusValidator';
 import { kielletytYritysmuodot } from './YritysmuotoUtils';
+import RekisterointiValmis from "./RekisterointiValmis";
+
+export type RekisterointiVirheet<T> = {
+    [K in keyof T]?: string | RekisterointiVirheet<T[K]>
+}
+
+const initialOrganisaatioVirheet: RekisterointiVirheet<Organisaatio> = {};
+function toRecord(virheet: RekisterointiVirheet<Organisaatio>): Record<string, string> {
+    const record: Record<string, string> = {};
+    for (let k in virheet) {
+        const key = k as keyof Organisaatio;
+        const kentta = virheet[key];
+        if (typeof kentta === "string") {
+            record[key] = kentta;
+        }
+    }
+    return record;
+}
 
 type Props = {
     initialOrganisaatio: Organisaatio,
@@ -39,7 +56,7 @@ function reducer<T>(state: T, data: Partial<T>): T {
 export default function Rekisterointi({initialOrganisaatio, organisaatio, setOrganisaatio, rekisteroinnitUrl}: Props) {
     const { i18n } = useContext(LanguageContext);
     const { koodisto: kuntaKoodisto } = useContext(KuntaKoodistoContext);
-    const [organisaatioErrors, setOrganisaatioErrors] = useState({});
+    const [organisaatioErrors, setOrganisaatioErrors] = useState(initialOrganisaatioVirheet);
     const [kunnat, setKunnat] = useState(initialKunnat);
     const [sahkopostit, setSahkopostit] = useState(intialSahkopostit);
     const [toimintamuoto, setToimintamuoto] = useState(initialToimintamuoto);
@@ -68,35 +85,21 @@ export default function Rekisterointi({initialOrganisaatio, organisaatio, setOrg
         }
     }
 
+    type PakollinenOrganisaatioKentta = Extract<keyof  Organisaatio, 'ytunnus' | 'yritysmuoto' | 'kotipaikkaUri' | 'alkuPvm'>;
+    const pakollisetOrganisaatioKentat: PakollinenOrganisaatioKentta[] = ['ytunnus', 'yritysmuoto', 'kotipaikkaUri', 'alkuPvm'];
+
     function validate(currentStep: number): boolean {
         setPostError(null);
         switch (currentStep) {
             case 1:
                 const organisaatioErrors: Record<string, string> = {};
                 if (!organisaatio.oid) {
-                    ['ytunnus', 'yritysmuoto', 'kotipaikkaUri', 'alkuPvm']
-                        .filter(field => !(organisaatio as any)[field])
+                    pakollisetOrganisaatioKentat
+                        .filter(field => !organisaatio[field])
                         .forEach(field => organisaatioErrors[field] = i18n.translate('PAKOLLINEN_TIETO'));
                     if (organisaatio.ytunnus && !YtunnusValidator.validate(organisaatio.ytunnus)) {
                         organisaatioErrors.ytunnus = i18n.translate('VIRHEELLINEN_YTUNNUS');
                     }
-                    [
-                        { name: 'puhelinnumero', filter: isPuhelinnumero, mapper: toPuhelinnumero },
-                        { name: 'sahkoposti', filter: isSahkoposti, mapper: toSahkoposti },
-                        { name: 'postiosoite', filter: isPostiosoite, mapper: toOsoite },
-                        { name: 'postinumero', filter: isPostiosoite, mapper: toPostinumeroUri },
-                        { name: 'kayntiosoite', filter: isKayntiosoite, mapper: toOsoite, },
-                        { name: 'kayntiosoitteenPostinumero', filter: isKayntiosoite, mapper: toPostinumeroUri, },
-                    ].filter(field => !getYhteystietoArvo(organisaatio.yhteystiedot, field.filter, field.mapper))
-                     .forEach(field => organisaatioErrors[field.name] = i18n.translate('PAKOLLINEN_TIETO'));
-                    [
-                        { name: 'postinumero', filter: isPostiosoite, postinumeroFn: toPostinumeroUri, postitoimipaikkaFn: toPostitoimipaikka },
-                        { name: 'kayntiosoitteenPostinumero', filter: isKayntiosoite, postinumeroFn: toPostinumeroUri, postitoimipaikkaFn: toPostitoimipaikka },
-                    ].filter(field => {
-                        const postinumero = getYhteystietoArvo(organisaatio.yhteystiedot, field.filter, field.postinumeroFn);
-                        const postitoimipaikka = getYhteystietoArvo(organisaatio.yhteystiedot, field.filter, field.postitoimipaikkaFn);
-                        return postinumero && !postitoimipaikka;
-                    }).forEach(field => organisaatioErrors[field.name] = i18n.translate('VIRHEELLINEN_POSTINUMERO'));
                 }
                 if (kielletytYritysmuodot.includes(organisaatio.yritysmuoto)) {
                     organisaatioErrors.yritysmuoto = i18n.translate('VIRHEELLINEN_YRITYSMUOTO');
@@ -110,16 +113,22 @@ export default function Rekisterointi({initialOrganisaatio, organisaatio, setOrg
                 if (sahkopostit.some(sahkoposti => !EmailValidator.validate(sahkoposti))) {
                     organisaatioErrors.sahkopostit = i18n.translate('VIRHEELLINEN_SAHKOPOSTI');
                 }
+                console.log(organisaatioErrors);
                 setOrganisaatioErrors(organisaatioErrors);
                 return Object.keys(organisaatioErrors).length === 0;
             case 2:
+                // TODO: refaktoroi kayttaja-osio
                 const kayttajaErrors: Record<string, string> = {};
-                ['etunimi', 'sukunimi', 'sahkoposti', 'asiointikieli']
-                    .filter(field => !kayttaja[field])
+                const _kayttaja = kayttaja as Kayttaja;
+                type KayttajaKentta = keyof Kayttaja;
+                const pakollisetKayttajaKentat: KayttajaKentta[] = ['etunimi', 'sukunimi', 'sahkoposti', 'asiointikieli'];
+                pakollisetKayttajaKentat
+                    .filter(field => !_kayttaja[field])
                     .forEach(field => kayttajaErrors[field] = i18n.translate('PAKOLLINEN_TIETO'));
-                if (!!kayttaja.sahkoposti && !EmailValidator.validate(kayttaja.sahkoposti)) {
+                if (!!_kayttaja.sahkoposti && !EmailValidator.validate(_kayttaja.sahkoposti)) {
                     kayttajaErrors.sahkoposti = i18n.translate('VIRHEELLINEN_SAHKOPOSTI');
                 }
+                console.log(kayttajaErrors);
                 setKayttajaErrors(kayttajaErrors);
                 return Object.keys(kayttajaErrors).length === 0;
         }
@@ -145,11 +154,11 @@ export default function Rekisterointi({initialOrganisaatio, organisaatio, setOrg
                     setKunnat={setKunnat}
                     sahkopostit={sahkopostit}
                     setSahkopostit={setSahkopostit}
-                    errors={organisaatioErrors} />
+                    errors={toRecord(organisaatioErrors)} />
                 <RekisterointiKayttaja
                     toimintamuoto={toimintamuoto}
                     setToimintamuoto={setToimintamuoto}
-                    kayttaja={kayttaja}
+                    kayttaja={kayttaja as Kayttaja}
                     setKayttaja={setKayttaja}
                     errors={kayttajaErrors} />
                 <RekisterointiYhteenveto
@@ -158,7 +167,8 @@ export default function Rekisterointi({initialOrganisaatio, organisaatio, setOrg
                     kunnat={kunnat}
                     sahkopostit={sahkopostit}
                     toimintamuoto={toimintamuoto}
-                    kayttaja={kayttaja} />
+                    kayttaja={kayttaja as Kayttaja} />
+                <RekisterointiValmis />
             </Wizard>
         </div>
     );

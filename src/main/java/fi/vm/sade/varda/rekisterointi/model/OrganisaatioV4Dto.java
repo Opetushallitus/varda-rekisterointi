@@ -34,6 +34,7 @@ public class OrganisaatioV4Dto extends BaseDto {
         organisaatio.nimet = singletonList(organisaatioNimi);
         organisaatio.maaUri = "maatjavaltiot1_fin";
         organisaatio.kieletUris = Set.of();
+        organisaatio.yhteystiedot = List.of();
         return organisaatio;
     }
 

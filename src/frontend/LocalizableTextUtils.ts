@@ -1,4 +1,4 @@
-import { Language, LocalizableText, KoodiUri } from "./types";
+import {Language, LocalizableText, KoodiUri, Koodi} from "./types";
 import { hasLength } from "./StringUtils";
 
 export function toLocalizedText(localizableText: LocalizableText | null | undefined,
@@ -11,6 +11,11 @@ export function toLocalizedText(localizableText: LocalizableText | null | undefi
         }
     }
     return defaultValue || '';
+}
+
+export function koodiByArvoToLocalizedText(koodit: Koodi[], language: Language, arvo?: string) {
+    const koodi = koodit.find(koodi => koodi.arvo === arvo);
+    return koodi ? toLocalizedText(koodi.nimi, language) : '';
 }
 
 export function hasLengthInLang(localizableText: LocalizableText | null | undefined,

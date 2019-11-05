@@ -1,26 +1,12 @@
-import React, { useEffect, useState, useReducer, useContext } from 'react';
-import { Organisaatio, KoodiUri } from '../types';
+import React, {useEffect, useState, useReducer, useContext} from 'react';
+import {Organisaatio, KoodiUri, tyhjaOrganisaatio} from '../types';
 import Spinner from '../Spinner';
 import Axios from 'axios';
 import Rekisterointi from './Rekisterointi';
 import ErrorPage from '../ErrorPage';
 import { LanguageContext } from '../contexts';
 
-const baseOrganisaatio: Organisaatio = {
-    ytunnus: '',
-    ytjNimi: {
-        nimi: '',
-        alkuPvm: null,
-        kieli: 'fi'
-    },
-    alkuPvm: null,
-    yritysmuoto: '',
-    tyypit: [],
-    kotipaikkaUri: '',
-    maaUri: 'maatjavaltiot1_fin',
-    kieletUris: [],
-    yhteystiedot: []
-};
+const baseOrganisaatio: Organisaatio = tyhjaOrganisaatio;
 
 const organisaatiotUrl = "/varda-rekisterointi/hakija/api/organisaatiot";
 const rekisteroinnitUrl = "/varda-rekisterointi/hakija/api/rekisteroinnit";
@@ -65,7 +51,7 @@ export default function RekisterointiHakija() {
     }
 
     return <Rekisterointi initialOrganisaatio={initialOrganisaatio}
-                          organisaatio={organisaatio}
+                          organisaatio={organisaatio as Organisaatio}
                           setOrganisaatio={setOrganisaatio}
                           rekisteroinnitUrl={rekisteroinnitUrl} />;
 }

@@ -38,9 +38,9 @@ export default function RekisterointiYhteenveto(props: Props) {
             </Fieldset>
             <Fieldset title={i18n.translate('ORGANISAATION_YHTEYSTIEDOT')}>
                 <OrganisaatioYhteystiedot readOnly={true}
-                                          initialOrganisaatio={props.organisaatio}
-                                          organisaatio={props.organisaatio}
-                                          setOrganisaatio={nop}
+                                          alkuperaisetYhteystiedot={props.organisaatio.yhteystiedot}
+                                          yhteystiedot={props.organisaatio.yhteystiedot}
+                                          paivitaOrganisaatio={nop}
                                           errors={nop()} />
             </Fieldset>
             <Fieldset title={i18n.translate('ORGANISAATION_KUNNAT')}>

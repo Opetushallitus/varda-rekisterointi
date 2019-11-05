@@ -1,4 +1,4 @@
-import {Kayttaja, Organisaatio} from "./types";
+import {Kayttaja, Organisaatio, tyhjatYhteystiedot} from "./types";
 import {Rekisterointihakemus, Tila} from "./virkailija/rekisterointihakemus";
 
 export const dummyOrganisaatio: Organisaatio = {
@@ -10,7 +10,7 @@ export const dummyOrganisaatio: Organisaatio = {
     kieletUris: [],
     maaUri: '',
     kotipaikkaUri: '',
-    yhteystiedot: [],
+    yhteystiedot: tyhjatYhteystiedot,
     ytunnus: '',
     alkuPvm: null,
     tyypit: [],
@@ -32,4 +32,4 @@ export const dummyHakemus: Rekisterointihakemus = {
     id: 0,
     vastaanotettu: '14.11.2019 10:44',
     tila: Tila.KASITTELYSSA
-}
+};
