@@ -1,5 +1,3 @@
-import {hasLength} from "./StringUtils";
-
 export type Language = 'fi' | 'sv' | 'en';
 export type LocalDate = string;
 export type LocalizableText = Partial<Record<Language, string>>;
@@ -89,24 +87,12 @@ export type Kayttaja = {
 // varda-rekisterointi
 export type Rekisterointi = {
     organisaatio: Organisaatio,
+    kunnat: string[],
     sahkopostit: string[],
     kayttaja: Kayttaja
 }
 
-export type Virheet<T> = {
-    [K in keyof T]?: string | Virheet<T[K]>
-}
-
-export function onTyhja<T>(virheet: Virheet<T>):boolean {
-    for (let k in virheet) {
-        const kentta = virheet[k];
-        if (typeof kentta === 'string') {
-            if (hasLength(kentta)) return false;
-        } else {
-            if (!onTyhja(kentta as Virheet<T>)) {
-                return false;
-            }
-        }
-    }
-    return true;
+export type RekisterointiVirheet<T> = {
+    [K in keyof T]?: T[K] extends string ? string :
+        T[K] extends string[] ? string : RekisterointiVirheet<T[K]>
 }

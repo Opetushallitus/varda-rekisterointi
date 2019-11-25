@@ -2,14 +2,14 @@ import React, { useContext } from 'react';
 import { LanguageContext } from '../contexts';
 import FormFieldContainer from '../FormFieldContainer';
 import KoodiMultiSelect from '../KoodiMultiSelect';
-import { Koodi } from '../types';
+import {Koodi, Rekisterointi, RekisterointiVirheet} from '../types';
 
 type Props = {
     readOnly?: boolean,
     kaikkiKunnat: Koodi[],
     kunnat: string[],
     setKunnat: (kunnat: string[]) => void,
-    errors: Record<string, string>,
+    errors: RekisterointiVirheet<Rekisterointi>,
 }
 
 export default function OrganisaatioKunnat({readOnly, kaikkiKunnat, kunnat, setKunnat, errors}: Props) {
@@ -18,7 +18,7 @@ export default function OrganisaatioKunnat({readOnly, kaikkiKunnat, kunnat, setK
     return (
         <>
             <FormFieldContainer readOnly={readOnly}
-                                errorText={errors.kunnat}
+                                errorText={errors.kunnat as string}
                                 label={i18n.translate('ORGANISAATION_KUNNAT')}>
                 <KoodiMultiSelect selectable={kaikkiKunnat}
                                   selected={kunnat}

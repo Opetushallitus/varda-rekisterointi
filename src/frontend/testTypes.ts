@@ -26,6 +26,7 @@ export const dummyKayttaja: Kayttaja = {
 };
 
 export const dummyHakemus: Rekisterointihakemus = {
+    kunnat: [],
     sahkopostit: [],
     kayttaja: dummyKayttaja,
     organisaatio: dummyOrganisaatio,

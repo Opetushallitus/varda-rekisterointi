@@ -1,30 +1,42 @@
-import React, {useContext, useEffect} from 'react';
-import { Organisaatio, Koodi } from '../types';
-import OrganisaatioYhteystiedot from './OrganisaatioYhteystiedot';
+import React, {useContext, useEffect, useState} from 'react';
+import {Organisaatio, Koodi, Rekisterointi, RekisterointiVirheet, Yhteystiedot} from '../types';
 import OrganisaatioTiedot from './OrganisaatioTiedot';
 import { LanguageContext } from '../contexts';
 import OrganisaatioSahkopostit from './OrganisaatioSahkopostit';
 import Fieldset from '../Fieldset';
 import OrganisaatioKunnat from './OrganisaatioKunnat';
+import YhteystiedotInput from "./YhteystiedotInput";
 
 type Props = {
-    initialOrganisaatio: Organisaatio,
-    organisaatio: Organisaatio,
-    setOrganisaatio: (organisaatio: Partial<Organisaatio>) => void,
-    kaikkiKunnat: Koodi[],
-    kunnat: string[],
-    setKunnat: (kunnat: string[]) => void,
-    sahkopostit: string[],
-    setSahkopostit: (sahkopostit: string[]) => void,
-    errors: Record<string, string>,
+    initialOrganisaatio: Organisaatio
+    organisaatio: Organisaatio
+    setOrganisaatio: (organisaatio: Partial<Organisaatio>) => void
+    kaikkiKunnat: Koodi[]
+    kunnat: string[]
+    setKunnat: (kunnat: string[]) => void
+    sahkopostit: string[]
+    setSahkopostit: (sahkopostit: string[]) => void
+    virheetCallback: (virheet: RekisterointiVirheet<Rekisterointi>) => void
 }
+
+const tyhjatVirheet: RekisterointiVirheet<Rekisterointi> = {};
 
 export default function RekisterointiOrganisaatio(props: Props) {
     const { i18n } = useContext(LanguageContext);
+    const [ virheet, asetaVirheet ] = useState(tyhjatVirheet);
 
     useEffect(() => {
-        console.log("Rendering RekisterointiOrganisaatio");
+        console.log("props.organisaatio muuttunut!");
     }, [props.organisaatio]);
+
+    function paivitaOrganisaatio(paivitys: Partial<Organisaatio>, virheet: Partial<RekisterointiVirheet<Organisaatio>>) {
+        asetaVirheet((vanhatVirheet) => {
+            const uudetVirheet = {...vanhatVirheet, ...virheet};
+            props.virheetCallback(uudetVirheet);
+            return uudetVirheet;
+        });
+        props.setOrganisaatio(paivitys);
+    }
 
     return (
         <form>
@@ -35,15 +47,17 @@ export default function RekisterointiOrganisaatio(props: Props) {
                                     initialOrganisaatio={props.initialOrganisaatio}
                                     organisaatio={props.organisaatio}
                                     setOrganisaatio={props.setOrganisaatio}
-                                    errors={props.errors} />
+                                    errors={virheet.organisaatio} />
             </Fieldset>
             <Fieldset title={i18n.translate('ORGANISAATION_YHTEYSTIEDOT')}
                       description={i18n.translate('ORGANISAATION_YHTEYSTIEDOT_KUVAUS')}>
-                <OrganisaatioYhteystiedot readOnly={!!props.initialOrganisaatio.oid}
-                                          alkuperaisetYhteystiedot={props.initialOrganisaatio.yhteystiedot}
-                                          yhteystiedot={props.organisaatio.yhteystiedot}
-                                          paivitaOrganisaatio={props.setOrganisaatio}
-                                          errors={props.errors} />
+                <YhteystiedotInput vainLuku={false} //{!!props.initialOrganisaatio.oid}
+                                   yhteystiedot={props.organisaatio.yhteystiedot}
+                                   paivitaYhteystiedot={(yhteystiedot: Partial<Yhteystiedot>, virheet: Partial<RekisterointiVirheet<Yhteystiedot>>) => {
+                                       paivitaOrganisaatio(
+                                           { yhteystiedot: {...props.organisaatio.yhteystiedot, ...yhteystiedot} },
+                                           { yhteystiedot: {...props.organisaatio.yhteystiedot, ...virheet } });
+                                   }} />
             </Fieldset>
             <Fieldset title={i18n.translate('ORGANISAATION_KUNNAT')}
                       description={i18n.translate('ORGANISAATION_KUNNAT_OHJE')}>
@@ -51,13 +65,13 @@ export default function RekisterointiOrganisaatio(props: Props) {
                                     kaikkiKunnat={props.kaikkiKunnat}
                                     kunnat={props.kunnat}
                                     setKunnat={props.setKunnat}
-                                    errors={props.errors} />
+                                    errors={virheet} />
             </Fieldset>
             <Fieldset title={i18n.translate('ORGANISAATION_SAHKOPOSTIT')}
                       description={i18n.translate('ORGANISAATION_SAHKOPOSTIT_KUVAUS')}>
                 <OrganisaatioSahkopostit sahkopostit={props.sahkopostit}
                                          setSahkopostit={props.setSahkopostit}
-                                         errors={props.errors} />
+                                         errors={virheet} />
             </Fieldset>
         </form>
     );

@@ -1,7 +1,7 @@
 import React from "react";
 import {render, unmountComponentAtNode} from "react-dom";
 import {act,Simulate} from "react-dom/test-utils";
-import {Koodi, Osoite, tyhjaOsoite, Virheet} from "../types";
+import {Koodi, Osoite, tyhjaOsoite, RekisterointiVirheet} from "../types";
 import OsoiteInput from "./OsoiteInput";
 
 const postinumerot: Koodi[] = [
@@ -15,7 +15,7 @@ const postinumerot: Koodi[] = [
         uri: 'posti_00950'
     }
 ];
-const noOpCallback = (osoite: Osoite, virheet: Virheet<Osoite>) => { /* */ };
+const noOpCallback = (_osoite: Osoite, _virheet: RekisterointiVirheet<Osoite>) => { /* */ };
 
 jest.mock('react-uid', () => {
     return {
@@ -41,7 +41,6 @@ describe('OsoiteInput', () => {
         await act(async() => {
             render(
                 <OsoiteInput postinumerot={postinumerot}
-                             alkuperainenOsoite={tyhjaOsoite}
                              osoite={tyhjaOsoite}
                              asetaOsoiteCallback={noOpCallback} />,
                 container);
@@ -59,9 +58,8 @@ describe('OsoiteInput', () => {
         await act(async() => {
             render(
                 <OsoiteInput postinumerot={postinumerot}
-                             alkuperainenOsoite={alkuperainenOsoite}
+                             vainLuku={true}
                              osoite={alkuperainenOsoite}
-                             onKopio={true}
                              asetaOsoiteCallback={noOpCallback} />,
                 container);
         });
@@ -74,7 +72,6 @@ describe('OsoiteInput', () => {
         await act(async() => {
             render(
                 <OsoiteInput postinumerot={postinumerot}
-                             alkuperainenOsoite={tyhjaOsoite}
                              osoite={tyhjaOsoite}
                              asetaOsoiteCallback={(paivitys, _) => osoitePaivitys = paivitys} />,
                 container);
@@ -87,11 +84,10 @@ describe('OsoiteInput', () => {
     });
 
     it('merkitsee virheelliseksi validoinnin epäonnistuessa', async () => {
-        let osoiteVirheet: Virheet<Osoite> = {};
+        let osoiteVirheet: RekisterointiVirheet<Osoite> = {};
         await act(async() => {
             render(
                 <OsoiteInput postinumerot={postinumerot}
-                             alkuperainenOsoite={tyhjaOsoite}
                              osoite={tyhjaOsoite}
                              asetaOsoiteCallback={(_, virheet) => osoiteVirheet = virheet} />,
                 container);
@@ -105,11 +101,10 @@ describe('OsoiteInput', () => {
     });
 
     it('ei merkitse virheelliseksi validoinnin onnistuessa', async () => {
-        let osoiteVirheet: Virheet<Osoite> = {};
+        let osoiteVirheet: RekisterointiVirheet<Osoite> = {};
         await act(async() => {
             render(
                 <OsoiteInput postinumerot={postinumerot}
-                             alkuperainenOsoite={tyhjaOsoite}
                              osoite={tyhjaOsoite}
                              asetaOsoiteCallback={(_, virheet) => osoiteVirheet = virheet} />,
                 container);
@@ -125,7 +120,6 @@ describe('OsoiteInput', () => {
         await act(async() => {
             render(
                 <OsoiteInput postinumerot={postinumerot}
-                             alkuperainenOsoite={tyhjaOsoite}
                              osoite={tyhjaOsoite}
                              asetaOsoiteCallback={noOpCallback} />,
                 container);
@@ -138,7 +132,6 @@ describe('OsoiteInput', () => {
         await act(async() => {
             render(
                 <OsoiteInput postinumerot={postinumerot}
-                             alkuperainenOsoite={tyhjaOsoite}
                              osoite={tyhjaOsoite}
                              asetaOsoiteCallback={noOpCallback}
                              asetaKopiointiCallback={_ => {}} />,
@@ -153,7 +146,6 @@ describe('OsoiteInput', () => {
         await act(async() => {
             render(
                 <OsoiteInput postinumerot={postinumerot}
-                             alkuperainenOsoite={tyhjaOsoite}
                              osoite={tyhjaOsoite}
                              asetaOsoiteCallback={noOpCallback}
                              asetaKopiointiCallback={_ => callbackKutsuttu = true} />,

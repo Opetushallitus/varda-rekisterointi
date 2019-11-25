@@ -1,38 +1,38 @@
 import React, {useContext, useEffect, useState} from 'react';
 import useAxios from 'axios-hooks';
 import FormFieldContainer from '../FormFieldContainer';
-import {Koodi, Yhteystiedot, Organisaatio, Osoite} from '../types';
+import {Koodi, Yhteystiedot, Organisaatio, RekisterointiVirheet} from '../types';
 import Spinner from '../Spinner';
 import { LanguageContext } from '../contexts';
 import classNames from 'classnames/bind';
 import ErrorPage from '../ErrorPage';
 import OsoiteInput from "./OsoiteInput";
-import {RekisterointiVirheet} from "./Rekisterointi";
 import {hasLength} from "../StringUtils";
 
 export type YhteystietoVirheet = RekisterointiVirheet<Yhteystiedot>
+const tyhjatVirheet: YhteystietoVirheet = {};
 
 type Props = {
     readOnly?: boolean,
-    alkuperaisetYhteystiedot: Yhteystiedot,
     yhteystiedot: Yhteystiedot,
     paivitaOrganisaatio: (paivitys: Partial<Organisaatio>, virheet: Partial<RekisterointiVirheet<Organisaatio>>) => void
-    errors: RekisterointiVirheet<Organisaatio>
+    errors?: RekisterointiVirheet<Organisaatio>
 }
 
 const baseClasses = { 'oph-input': true };
 type YhteystietoKentta = keyof Yhteystiedot;
 
-export default function OrganisaatioYhteystiedot({ readOnly, alkuperaisetYhteystiedot, yhteystiedot, paivitaOrganisaatio, errors }: Props) {
+export default function OrganisaatioYhteystiedot({ readOnly = false, yhteystiedot,
+                                                   paivitaOrganisaatio, errors = {} }: Props) {
     const { i18n } = useContext(LanguageContext);
     const [ kayntiOsoiteSama, asetaKayntiOsoiteSama ] = useState(false);
     const [{data: postinumerot, loading: postinumerotLoading, error: postinumerotError}]
         = useAxios<Koodi[]>('/varda-rekisterointi/api/koodisto/POSTI/koodi?onlyValid=true');
-    const virheet: YhteystietoVirheet = errors.yhteystiedot ? errors.yhteystiedot as YhteystietoVirheet : {};
+    const [ virheet, asetaVirheet ] = useState(tyhjatVirheet);
 
     useEffect(() => {
-        console.log(`Rendering OrganisaatioYhteystiedot with data: ${JSON.stringify(yhteystiedot)}`);
-    }, [readOnly, yhteystiedot, errors]);
+        asetaVirheet(errors.yhteystiedot || tyhjatVirheet as YhteystietoVirheet);
+    }, [yhteystiedot, errors]);
 
     if (postinumerotLoading) {
         return <Spinner />;
@@ -41,25 +41,28 @@ export default function OrganisaatioYhteystiedot({ readOnly, alkuperaisetYhteyst
         return <ErrorPage>{i18n.translate('ERROR_FETCH')}</ErrorPage>;
     }
 
-    function paivitaYhteystiedot(paivitys: Partial<Yhteystiedot>, paivitysVirheet: YhteystietoVirheet = {}) {
-        paivitaOrganisaatio({ yhteystiedot: {...yhteystiedot, ...paivitys} }, { yhteystiedot: {...virheet, ...paivitysVirheet }});
+    function validoiKentta(kentta: YhteystietoKentta, arvo: string): YhteystietoVirheet {
+        let virheet: YhteystietoVirheet = {};
+        if (kentta === 'puhelinnumero' || kentta === 'sahkoposti') { // OsoiteInput validoi itsensä
+            if (!hasLength(arvo)) {
+                virheet[kentta] = i18n.translate('PAKOLLINEN_TIETO');
+            }
+        }
+        return virheet;
     }
 
-    function eiTyhja(yhteystieto: undefined | string | Osoite): boolean {
-        if (!yhteystieto || typeof yhteystieto === 'string') {
-            return hasLength(yhteystieto);
-        }
-        const osoite = yhteystieto as Osoite;
-        return hasLength(osoite.katuosoite)
-            || hasLength(osoite.postitoimipaikka)
-            || hasLength(osoite.postinumeroUri);
+    function paivitaYhteystiedot(paivitys: Partial<Yhteystiedot>, paivitysVirheet: YhteystietoVirheet = {}) {
+        asetaVirheet((vanhatVirheet) => { return { ...vanhatVirheet, ...paivitysVirheet } });
+        paivitaOrganisaatio(
+            { yhteystiedot: {...yhteystiedot, ...paivitys} },
+            { yhteystiedot: { ...errors.yhteystiedot, ...virheet }});
     }
 
     function disabled(kentta: YhteystietoKentta): boolean {
         if (kentta === 'kayntiosoite' && kayntiOsoiteSama) {
             return true;
         }
-        return readOnly || eiTyhja(alkuperaisetYhteystiedot[kentta]);
+        return readOnly;
     }
 
     function kopioiKayntiOsoite(kopioi: boolean) {
@@ -83,7 +86,9 @@ export default function OrganisaatioYhteystiedot({ readOnly, alkuperaisetYhteyst
                        id="puhelinnumero"
                        defaultValue={yhteystiedot.puhelinnumero}
                        disabled={disabled('puhelinnumero')}
-                       onChange={event => paivitaYhteystiedot({ puhelinnumero: event.currentTarget.value })} />
+                       onBlur={event => paivitaYhteystiedot(
+                           { puhelinnumero: event.currentTarget.value },
+                           validoiKentta('puhelinnumero', event.currentTarget.value))} />
             </FormFieldContainer>
             <FormFieldContainer label={i18n.translate('ORGANISAATION_SAHKOPOSTI')} labelFor="organisaation-sahkoposti" errorText={virheet.sahkoposti}>
                 <input className={classNames({ ...baseClasses, 'oph-input-has-error': !!virheet.sahkoposti })}
@@ -91,15 +96,17 @@ export default function OrganisaatioYhteystiedot({ readOnly, alkuperaisetYhteyst
                        id="organisaation-sahkoposti"
                        defaultValue={yhteystiedot.sahkoposti}
                        disabled={disabled('sahkoposti')}
-                       onChange={event => paivitaYhteystiedot({ sahkoposti: event.currentTarget.value })} />
+                       onBlur={event => paivitaYhteystiedot(
+                           { sahkoposti: event.currentTarget.value },
+                           validoiKentta('sahkoposti', event.currentTarget.value))} />
             </FormFieldContainer>
             <OsoiteInput postinumerot={ postinumerot }
-                         alkuperainenOsoite={{ ...alkuperaisetYhteystiedot.postiosoite }}
+                         vainLuku={readOnly}
                          osoite={yhteystiedot.postiosoite}
                          asetaOsoiteCallback={(osoite, virheet) => paivitaYhteystiedot(
                              { postiosoite: osoite }, { postiosoite: virheet })} />
             <OsoiteInput postinumerot={ postinumerot }
-                         alkuperainenOsoite={{ ...alkuperaisetYhteystiedot.kayntiosoite }}
+                         vainLuku={readOnly}
                          osoite={yhteystiedot.kayntiosoite}
                          asetaOsoiteCallback={(osoite, virheet) => paivitaYhteystiedot(
                              { kayntiosoite: osoite }, { kayntiosoite: virheet })}

@@ -1,18 +1,18 @@
-import React, {useContext, useEffect} from 'react';
+import React, {useContext} from 'react';
 import {useUIDSeed} from "react-uid";
 import classNames from "classnames/bind";
 import FormFieldContainer from "../FormFieldContainer";
 import { LanguageContext } from '../contexts';
-import {Koodi, Osoite, tyhjaOsoite, Virheet} from "../types";
+import {Koodi, Osoite, tyhjaOsoite, RekisterointiVirheet} from "../types";
 import {koodiByArvoToLocalizedText} from "../LocalizableTextUtils";
 import {hasLength} from "../StringUtils";
 
 type Props = {
     postinumerot: Koodi[]
-    alkuperainenOsoite?: Osoite
+    vainLuku?: boolean
     osoite?: Osoite
-    virheet?: Virheet<Osoite>
-    asetaOsoiteCallback: (osoite: Osoite, virheet: Virheet<Osoite>) => void
+    virheet?: RekisterointiVirheet<Osoite>
+    asetaOsoiteCallback: (osoite: Osoite, virheet: RekisterointiVirheet<Osoite>) => void
     kaannosavaimet?: Record<keyof Osoite, string>
     onKopio?: boolean
     asetaKopiointiCallback?: (kopioi: boolean) => void
@@ -24,28 +24,18 @@ const oletusKaannosavaimet = {
     postitoimipaikka: 'POSTITOIMIPAIKKA'
 };
 
-type OsoiteKentta = Exclude<keyof Osoite, 'postitoimipaikka'>;
-
-const tyhjatVirheet: Virheet<Osoite> = {};
+const tyhjatVirheet: RekisterointiVirheet<Osoite> = {};
 const baseClasses = { 'oph-input': true };
 
-export default function OsoiteInput({ postinumerot, alkuperainenOsoite = tyhjaOsoite, osoite = tyhjaOsoite,
+export default function OsoiteInput({ postinumerot, vainLuku = false, osoite = tyhjaOsoite,
                                       virheet = tyhjatVirheet, asetaOsoiteCallback,
                                       kaannosavaimet = oletusKaannosavaimet, onKopio = false,
                                       asetaKopiointiCallback }: Props) {
     const seed = useUIDSeed();
     const { language, i18n } = useContext(LanguageContext);
 
-    useEffect(() => {
-        console.log(`Rendering: ${JSON.stringify(osoite)}`);
-    }, [osoite, onKopio]);
-
-    function vainLuku(kentta: OsoiteKentta) {
-        return hasLength(alkuperainenOsoite[kentta]);
-    }
-
-    function validoiOsoite(paivitys: Partial<Osoite>): Virheet<Osoite> {
-        const uudetVirheet: Virheet<Osoite> = {};
+    function validoiOsoite(paivitys: Partial<Osoite>): RekisterointiVirheet<Osoite> {
+        const uudetVirheet: RekisterointiVirheet<Osoite> = {};
         for (let kentta in paivitys) {
             const avain = kentta as keyof Osoite;
             const arvo = paivitys[avain];
@@ -62,9 +52,20 @@ export default function OsoiteInput({ postinumerot, alkuperainenOsoite = tyhjaOs
     }
 
     function paivitaOsoite(paivitys: Partial<Osoite>) {
-        const uudetVirheet = validoiOsoite(paivitys);
-        const paivitetytVirheet = { ...virheet, ...uudetVirheet };
-        asetaOsoiteCallback({ ...osoite, ...paivitys }, paivitetytVirheet );
+        let muutoksia = false;
+        for (let property in paivitys) {
+            const kentta = property as keyof Osoite;
+            const arvo = paivitys[kentta];
+            if (arvo && arvo !== osoite[kentta]) {
+                muutoksia = true;
+                break;
+            }
+        }
+        if (muutoksia) {
+            const uudetVirheet = validoiOsoite(paivitys);
+            const paivitetytVirheet = { ...virheet, ...uudetVirheet };
+            asetaOsoiteCallback({ ...osoite, ...paivitys }, paivitetytVirheet );
+        }
     }
 
     function poistaUriEtuliite(postinumeroUri: string | undefined) {
@@ -83,7 +84,7 @@ export default function OsoiteInput({ postinumerot, alkuperainenOsoite = tyhjaOs
                    type="text"
                    id={seed('katuosoite')}
                    defaultValue={osoite.katuosoite}
-                   disabled={onKopio || vainLuku('katuosoite')}
+                   disabled={onKopio || vainLuku}
                    onBlur={event => paivitaOsoite({ katuosoite: event.target.value })}
             />
             { asetaKopiointiCallback ?
@@ -91,7 +92,7 @@ export default function OsoiteInput({ postinumerot, alkuperainenOsoite = tyhjaOs
                 <input type="checkbox"
                        className="oph-checkable-input"
                        defaultChecked={onKopio}
-                       disabled={vainLuku('katuosoite')}
+                       disabled={vainLuku}
                        onClick={() => asetaKopiointiCallback(!onKopio)}
                 />
                 <span className="oph-checkable-text">{ i18n.translate('SAMA_KUIN_POSTIOSOITE') }</span>
@@ -104,7 +105,7 @@ export default function OsoiteInput({ postinumerot, alkuperainenOsoite = tyhjaOs
                    type="text"
                    id={seed('postinumeroUri')}
                    defaultValue={poistaUriEtuliite(osoite.postinumeroUri)}
-                   disabled={onKopio || vainLuku('postinumeroUri')}
+                   disabled={onKopio || vainLuku}
                    onBlur={event => {
                        const postinumeroUri = lisaaUriEtuliite(event.currentTarget.value);
                        paivitaOsoite({

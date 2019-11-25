@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import useAxios from 'axios-hooks';
 import DateSelect from '../DateSelect';
 import FormFieldContainer from '../FormFieldContainer';
-import { Organisaatio, Koodi } from '../types';
+import { Organisaatio, Koodi, RekisterointiVirheet } from '../types';
 import KoodiSelect from '../KoodiSelect';
 import { toLocalizedText } from '../LocalizableTextUtils';
 import { hasLength } from '../StringUtils';
@@ -18,10 +18,11 @@ type Props = {
     initialOrganisaatio: Organisaatio,
     organisaatio: Organisaatio,
     setOrganisaatio: (organisaatio: Partial<Organisaatio>) => void,
-    errors: Record<string, string>,
+    errors?: RekisterointiVirheet<Organisaatio>,
 }
 
-export default function OrganisaatioTiedot({readOnly, kaikkiKunnat, initialOrganisaatio, organisaatio, setOrganisaatio, errors}: Props) {
+export default function OrganisaatioTiedot({readOnly, kaikkiKunnat, initialOrganisaatio, organisaatio, setOrganisaatio,
+                                            errors = {}}: Props) {
     const { language, i18n } = useContext(LanguageContext);
     const [{data: yritysmuodot, loading: yritysmuotoLoading, error: yritysmuodotError}]
         = useAxios<Koodi[]>('/varda-rekisterointi/api/koodisto/YRITYSMUOTO/koodi?onlyValid=true');
@@ -52,8 +53,8 @@ export default function OrganisaatioTiedot({readOnly, kaikkiKunnat, initialOrgan
 
     return (
         <>
-            <FormFieldContainer label={i18n.translate('ORGANISAATION_NIMI')} errorText={errors.nimi}>
-                <input className={classNames({ ...baseClasses, 'oph-input-has-error': !!errors.nimi })}
+            <FormFieldContainer label={i18n.translate('ORGANISAATION_NIMI')} errorText={errors.ytjNimi as string}>
+                <input className={classNames({ ...baseClasses, 'oph-input-has-error': !!errors.ytjNimi })}
                        type="text"
                        id="nimi"
                        value={organisaatio.ytjNimi.nimi}
@@ -91,7 +92,7 @@ export default function OrganisaatioTiedot({readOnly, kaikkiKunnat, initialOrgan
                                 onChange={kotipaikkaUri => setOrganisaatio({ kotipaikkaUri: kotipaikkaUri })} />
                 </div>
             </FormFieldContainer>
-            <FormFieldContainer label={i18n.translate('TOIMINNAN_ALKAMISAIKA')} errorText={errors.alkuPvm}>
+            <FormFieldContainer label={i18n.translate('TOIMINNAN_ALKAMISAIKA')} errorText={errors.alkuPvm as string}>
                 <div className="oph-input-container">
                     <DateSelect value={organisaatio.alkuPvm}
                                 disabled={alkuPvmDisabled}

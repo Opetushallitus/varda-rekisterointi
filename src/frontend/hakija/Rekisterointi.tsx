@@ -1,7 +1,8 @@
 import React, { useState, useReducer, useContext } from 'react';
 import RekisterointiOrganisaatio from './RekisterointiOrganisaatio';
 import RekisterointiKayttaja from './RekisterointiKayttaja';
-import {Organisaatio, Kayttaja} from '../types';
+import {Organisaatio, Kayttaja, RekisterointiVirheet} from '../types';
+import {Rekisterointi as RekisterointiType} from '../types';
 import RekisterointiYhteenveto from './RekisterointiYhteenveto';
 import Axios from 'axios';
 import './Rekisterointi.css';
@@ -14,22 +15,7 @@ import * as YtunnusValidator from '../YtunnusValidator';
 import { kielletytYritysmuodot } from './YritysmuotoUtils';
 import RekisterointiValmis from "./RekisterointiValmis";
 
-export type RekisterointiVirheet<T> = {
-    [K in keyof T]?: string | RekisterointiVirheet<T[K]>
-}
-
-const initialOrganisaatioVirheet: RekisterointiVirheet<Organisaatio> = {};
-function toRecord(virheet: RekisterointiVirheet<Organisaatio>): Record<string, string> {
-    const record: Record<string, string> = {};
-    for (let k in virheet) {
-        const key = k as keyof Organisaatio;
-        const kentta = virheet[key];
-        if (typeof kentta === "string") {
-            record[key] = kentta;
-        }
-    }
-    return record;
-}
+const initialRekisterointiVirheet: RekisterointiVirheet<RekisterointiType> = {};
 
 type Props = {
     initialOrganisaatio: Organisaatio,
@@ -56,7 +42,7 @@ function reducer<T>(state: T, data: Partial<T>): T {
 export default function Rekisterointi({initialOrganisaatio, organisaatio, setOrganisaatio, rekisteroinnitUrl}: Props) {
     const { i18n } = useContext(LanguageContext);
     const { koodisto: kuntaKoodisto } = useContext(KuntaKoodistoContext);
-    const [organisaatioErrors, setOrganisaatioErrors] = useState(initialOrganisaatioVirheet);
+    const [rekisterointiErrors, setRekisterointiErrors] = useState(initialRekisterointiVirheet);
     const [kunnat, setKunnat] = useState(initialKunnat);
     const [sahkopostit, setSahkopostit] = useState(intialSahkopostit);
     const [toimintamuoto, setToimintamuoto] = useState(initialToimintamuoto);
@@ -92,7 +78,8 @@ export default function Rekisterointi({initialOrganisaatio, organisaatio, setOrg
         setPostError(null);
         switch (currentStep) {
             case 1:
-                const organisaatioErrors: Record<string, string> = {};
+                const errors: RekisterointiVirheet<RekisterointiType> = rekisterointiErrors;
+                const organisaatioErrors: RekisterointiVirheet<Organisaatio> = rekisterointiErrors.organisaatio || {};
                 if (!organisaatio.oid) {
                     pakollisetOrganisaatioKentat
                         .filter(field => !organisaatio[field])
@@ -105,20 +92,20 @@ export default function Rekisterointi({initialOrganisaatio, organisaatio, setOrg
                     organisaatioErrors.yritysmuoto = i18n.translate('VIRHEELLINEN_YRITYSMUOTO');
                 }
                 if (kunnat.length === 0) {
-                    organisaatioErrors.kunnat = i18n.translate('PAKOLLINEN_TIETO');
+                    errors.kunnat = i18n.translate('PAKOLLINEN_TIETO');
                 }
                 if (sahkopostit.length === 0) {
-                    organisaatioErrors.sahkopostit = i18n.translate('PAKOLLINEN_TIETO');
+                    errors.sahkopostit = i18n.translate('PAKOLLINEN_TIETO');
                 }
                 if (sahkopostit.some(sahkoposti => !EmailValidator.validate(sahkoposti))) {
-                    organisaatioErrors.sahkopostit = i18n.translate('VIRHEELLINEN_SAHKOPOSTI');
+                    errors.sahkopostit = i18n.translate('VIRHEELLINEN_SAHKOPOSTI');
                 }
-                console.log(organisaatioErrors);
-                setOrganisaatioErrors(organisaatioErrors);
+                console.log(JSON.stringify(organisaatioErrors));
+                setRekisterointiErrors({...errors, organisaatio: organisaatioErrors });
                 return Object.keys(organisaatioErrors).length === 0;
             case 2:
                 // TODO: refaktoroi kayttaja-osio
-                const kayttajaErrors: Record<string, string> = {};
+                const kayttajaErrors: RekisterointiVirheet<Kayttaja> = {};
                 const _kayttaja = kayttaja as Kayttaja;
                 type KayttajaKentta = keyof Kayttaja;
                 const pakollisetKayttajaKentat: KayttajaKentta[] = ['etunimi', 'sukunimi', 'sahkoposti', 'asiointikieli'];
@@ -154,7 +141,7 @@ export default function Rekisterointi({initialOrganisaatio, organisaatio, setOrg
                     setKunnat={setKunnat}
                     sahkopostit={sahkopostit}
                     setSahkopostit={setSahkopostit}
-                    errors={toRecord(organisaatioErrors)} />
+                    virheetCallback={virheet => setRekisterointiErrors((vanhat) => { return {...vanhat, ...virheet}})} />
                 <RekisterointiKayttaja
                     toimintamuoto={toimintamuoto}
                     setToimintamuoto={setToimintamuoto}
