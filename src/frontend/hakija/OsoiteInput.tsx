@@ -87,12 +87,11 @@ export default function OsoiteInput({ postinumerot, vainLuku = false, osoite = t
                    disabled={onKopio || vainLuku}
                    onBlur={event => paivitaOsoite({ katuosoite: event.target.value })}
             />
-            { asetaKopiointiCallback ?
+            { asetaKopiointiCallback && !vainLuku ?
             <label>
                 <input type="checkbox"
                        className="oph-checkable-input"
                        defaultChecked={onKopio}
-                       disabled={vainLuku}
                        onClick={() => asetaKopiointiCallback(!onKopio)}
                 />
                 <span className="oph-checkable-text">{ i18n.translate('SAMA_KUIN_POSTIOSOITE') }</span>

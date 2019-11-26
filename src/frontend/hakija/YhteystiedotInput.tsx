@@ -57,8 +57,8 @@ export default function YhteystiedotInput({ vainLuku, yhteystiedot, paivitaYhtey
         let paivitys = { [kentta]: osoite };
         let virheet = { [kentta]: osoiteVirheet };
         if (kentta === 'postiosoite' && kopioiPostiosoite) {
-            paivitys = { ...paivitys, 'kayntiosoite': osoite };
-            virheet = { ...virheet, 'kayntiosoite': osoiteVirheet};
+            paivitys.kayntiosoite = {...osoite};
+            virheet.kayntiosoite = {...osoiteVirheet};
         }
         paivitaYhteystiedot(paivitys, virheet);
     }
