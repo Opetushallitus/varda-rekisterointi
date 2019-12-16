@@ -14,9 +14,9 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @RunWith(SpringRunner.class)
@@ -36,8 +36,8 @@ public class RekisterointiFinalizerTest {
                                                              VardaOrganisaatioFinalizer vardaOrganisaatioFinalizer,
                                                              VardaKayttajaFinalizer vardaKayttajaFinalizer,
                                                              SchedulerClient schedulerClient,
-                                                             Task<Long> kutsuKayttajaTask,
-                                                             Task<Long> paatosEmailTask) {
+                                                             Task<UUID> kutsuKayttajaTask,
+                                                             Task<UUID> paatosEmailTask) {
             return new RekisterointiFinalizer(rekisterointiRepository, vardaOrganisaatioFinalizer,
                     vardaKayttajaFinalizer, schedulerClient, kutsuKayttajaTask, paatosEmailTask);
         }
@@ -52,9 +52,9 @@ public class RekisterointiFinalizerTest {
     @MockBean
     private SchedulerClient schedulerClient;
     @MockBean(name = "kutsuKayttajaTask")
-    private Task<Long> kutsuKayttajaTask;
+    private Task<UUID> kutsuKayttajaTask;
     @MockBean(name = "paatosEmailTask")
-    private Task<Long> paatosEmailTask;
+    private Task<UUID> paatosEmailTask;
     @Autowired
     private RekisterointiFinalizer rekisterointiFinalizer;
 
@@ -68,11 +68,11 @@ public class RekisterointiFinalizerTest {
                 Set.of("testi@osoite.foo"),
                 TESTI_KAYTTAJA
         );
-        when(rekisterointiRepository.findById(anyLong())).thenReturn(Optional.of(rekisterointi));
+        when(rekisterointiRepository.findById(any(UUID.class))).thenReturn(Optional.of(rekisterointi));
         when(vardaOrganisaatioFinalizer.luoTaiPaivitaOrganisaatio(any(Rekisterointi.class))).thenReturn("1.23.456");
-        rekisterointiFinalizer.luoTaiPaivitaOrganisaatio(1L);
+        rekisterointiFinalizer.luoTaiPaivitaOrganisaatio(UUID.randomUUID());
         verify(rekisterointiRepository).save(any(Rekisterointi.class));
-        verify(kutsuKayttajaTask).instance(anyString(), anyLong());
+        verify(kutsuKayttajaTask).instance(anyString(), any(UUID.class));
         verify(schedulerClient).schedule(any(), any());
     }
 
@@ -86,11 +86,11 @@ public class RekisterointiFinalizerTest {
                 Set.of("testi@osoite.foo"),
                 TESTI_KAYTTAJA
         );
-        when(rekisterointiRepository.findById(anyLong())).thenReturn(Optional.of(rekisterointi));
+        when(rekisterointiRepository.findById(any(UUID.class))).thenReturn(Optional.of(rekisterointi));
         when(vardaOrganisaatioFinalizer.luoTaiPaivitaOrganisaatio(any(Rekisterointi.class))).thenReturn(organisaatio.oid);
-        rekisterointiFinalizer.luoTaiPaivitaOrganisaatio(1L);
+        rekisterointiFinalizer.luoTaiPaivitaOrganisaatio(UUID.randomUUID());
         verify(rekisterointiRepository, never()).save(any(Rekisterointi.class));
-        verify(kutsuKayttajaTask).instance(anyString(), anyLong());
+        verify(kutsuKayttajaTask).instance(anyString(), any(UUID.class));
         verify(schedulerClient).schedule(any(), any());
     }
 
@@ -104,10 +104,10 @@ public class RekisterointiFinalizerTest {
                 Set.of("testi@osoite.foo"),
                 TESTI_KAYTTAJA
         );
-        when(rekisterointiRepository.findById(anyLong())).thenReturn(Optional.of(rekisterointi));
-        rekisterointiFinalizer.kutsuKayttaja(1L);
+        when(rekisterointiRepository.findById(any(UUID.class))).thenReturn(Optional.of(rekisterointi));
+        rekisterointiFinalizer.kutsuKayttaja(UUID.randomUUID());
         verify(vardaKayttajaFinalizer).kutsuKayttaja(rekisterointi);
-        verify(paatosEmailTask).instance(anyString(), anyLong());
+        verify(paatosEmailTask).instance(anyString(), any(UUID.class));
         verify(schedulerClient).schedule(any(), any());
     }
 

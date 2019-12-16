@@ -24,6 +24,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -39,18 +40,18 @@ public class RekisterointiServiceTest {
                                                          ApplicationEventPublisher eventPublisher,
                                                          SchedulerClient schedulerClient,
                                                          @Qualifier("rekisterointiEmailTask")
-                                                         Task<Long> rekisterointiEmailTask,
+                                                         Task<UUID> rekisterointiEmailTask,
                                                          @Qualifier("paatosEmailTask")
-                                                         Task<Long> paatosEmailTask,
+                                                         Task<UUID> paatosEmailTask,
                                                          @Qualifier("luoTaiPaivitaOrganisaatioTask")
-                                                         Task<Long> luoTaiPaivitaOrganisaatioTask) {
+                                                         Task<UUID> luoTaiPaivitaOrganisaatioTask) {
             return new RekisterointiService(rekisterointiRepository, eventPublisher, schedulerClient,
                     rekisterointiEmailTask, paatosEmailTask, luoTaiPaivitaOrganisaatioTask);
         }
     }
 
-    private static final Long SAVED_REKISTEROINTI_ID = 1L;
-    private static final Long INVALID_REKISTEROINTI_ID = 2L;
+    private static final UUID SAVED_REKISTEROINTI_ID = UUID.randomUUID();
+    private static final UUID INVALID_REKISTEROINTI_ID = UUID.randomUUID();
     private static final String PAATTAJA_OID = "1.234.56789";
     private static final Rekisterointi SAVED_REKISTEROINTI = new Rekisterointi(
             SAVED_REKISTEROINTI_ID,
@@ -92,13 +93,13 @@ public class RekisterointiServiceTest {
     private SchedulerClient schedulerClient;
 
     @MockBean(name = "rekisterointiEmailTask")
-    Task<Long> rekisterointiEmailTask;
+    Task<UUID> rekisterointiEmailTask;
 
     @MockBean(name = "paatosEmailTask")
-    Task<Long> paatosEmailTask;
+    Task<UUID> paatosEmailTask;
 
     @MockBean(name = "luoTaiPaivitaOrganisaatioTask")
-    Task<Long> luoTaiPaivitaOrganisaatioTask;
+    Task<UUID> luoTaiPaivitaOrganisaatioTask;
 
     @Autowired
     private RekisterointiService rekisterointiService;
@@ -115,7 +116,7 @@ public class RekisterointiServiceTest {
 
     @Test
     public void createSavesRekisterointi() {
-        Long id = rekisterointiService.create(SAVED_REKISTEROINTI, requestContext("user1"));
+        UUID id = rekisterointiService.create(SAVED_REKISTEROINTI, requestContext("user1"));
         assertEquals(SAVED_REKISTEROINTI_ID, id);
         verify(rekisterointiRepository).save(SAVED_REKISTEROINTI);
     }
@@ -132,7 +133,7 @@ public class RekisterointiServiceTest {
 
     @Test(expected = IllegalStateException.class)
     public void resolveThrowsOnInvalidRekisterointiTila() {
-        PaatosDto paatos = new PaatosDto(123L, false, "Juuh elikkäs");
+        PaatosDto paatos = new PaatosDto(UUID.randomUUID(), false, "Juuh elikkäs");
         Rekisterointi hylatty = TestiRekisterointi.validiRekisterointi()
                 .withId(paatos.rekisterointi)
                 .withPaatos(new Paatos(paatos.hyvaksytty, LocalDateTime.now(), PAATTAJA_OID, paatos.perustelu));
@@ -155,7 +156,7 @@ public class RekisterointiServiceTest {
 
     @Test
     public void resolveBatchSavesEachPaatosAndUpdatesRekisterointiTila() {
-        List<Long> hakemusTunnukset = List.of(1L, 1L);
+        List<UUID> hakemusTunnukset = List.of(SAVED_REKISTEROINTI_ID, SAVED_REKISTEROINTI_ID);
         PaatosBatch paatokset = new PaatosBatch(
                 true,
                 "OK!",

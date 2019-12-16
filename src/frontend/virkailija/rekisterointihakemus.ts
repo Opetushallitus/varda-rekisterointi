@@ -13,7 +13,6 @@ export type Paatos = {
 }
 
 export interface Rekisterointihakemus extends Rekisterointi {
-    id: number;
     vastaanotettu: string;
     tila: Tila;
     paatos?: Paatos; // puuttuu, jos tila on KASITTELYSSA

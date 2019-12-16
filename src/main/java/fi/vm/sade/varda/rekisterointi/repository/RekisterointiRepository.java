@@ -5,7 +5,9 @@ import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 
-public interface RekisterointiRepository extends CrudRepository<Rekisterointi, Long> {
+import java.util.UUID;
+
+public interface RekisterointiRepository extends CrudRepository<Rekisterointi, UUID> {
 
     // toistaiseksi Spring Data JDBC ei loihdi automaattisesti metodeista queryjä
     // huom. referoidun taulun sarakkeille annettava selectissä etuliite "<taulunimi>_"

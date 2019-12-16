@@ -10,6 +10,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.env.Environment;
 
+import java.util.UUID;
+
 import static com.github.kagkarlsson.scheduler.task.schedule.Schedules.parseSchedule;
 
 @Configuration
@@ -25,14 +27,14 @@ public class SchedulingConfiguration {
     }
 
     @Bean
-    public Task<Long> rekisterointiEmailTask() {
-        return Tasks.oneTime("rekisterointi-email-task", Long.class).execute((instance, ctx)
+    public Task<UUID> rekisterointiEmailTask() {
+        return Tasks.oneTime("rekisterointi-email-task", UUID.class).execute((instance, ctx)
                 -> emailService.lahetaRekisterointiEmail(instance.getData()));
     }
 
     @Bean
-    public Task<Long> paatosEmailTask() {
-        return Tasks.oneTime("paatos-email-task", Long.class).execute((instance, ctx)
+    public Task<UUID> paatosEmailTask() {
+        return Tasks.oneTime("paatos-email-task", UUID.class).execute((instance, ctx)
                 -> emailService.lahetaPaatosEmail(instance.getData()));
     }
 
@@ -45,15 +47,15 @@ public class SchedulingConfiguration {
     }
 
     @Bean
-    public Task<Long> luoTaiPaivitaOrganisaatioTask() {
-        return Tasks.oneTime("luo-tai-paivita-organisaatio-task", Long.class).execute(
+    public Task<UUID> luoTaiPaivitaOrganisaatioTask() {
+        return Tasks.oneTime("luo-tai-paivita-organisaatio-task", UUID.class).execute(
                 (instance, ctx) -> rekisterointiFinalizer.luoTaiPaivitaOrganisaatio(instance.getData())
         );
     }
 
     @Bean
-    public Task<Long> kutsuKayttajaTask() {
-        return Tasks.oneTime("kutsu-kayttaja-task", Long.class).execute(
+    public Task<UUID> kutsuKayttajaTask() {
+        return Tasks.oneTime("kutsu-kayttaja-task", UUID.class).execute(
                 (instance, ctx) -> rekisterointiFinalizer.kutsuKayttaja(instance.getData())
         );
     }

@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @AllArgsConstructor
@@ -33,11 +34,11 @@ public class RekisterointiService {
     private final ApplicationEventPublisher eventPublisher;
     private final SchedulerClient schedulerClient;
     @Qualifier("rekisterointiEmailTask")
-    private final Task<Long> rekisterointiEmailTask;
+    private final Task<UUID> rekisterointiEmailTask;
     @Qualifier("paatosEmailTask")
-    private final Task<Long> paatosEmailTask;
+    private final Task<UUID> paatosEmailTask;
     @Qualifier("luoTaiPaivitaOrganisaatioTask")
-    private final Task<Long> luoTaiPaivitaOrganisaatioTask;
+    private final Task<UUID> luoTaiPaivitaOrganisaatioTask;
 
     public Iterable<Rekisterointi> listByTilaAndOrganisaatio(Rekisterointi.Tila tila, String organisaatio) {
         if (organisaatio == null || organisaatio.length() == 0) {
@@ -56,9 +57,9 @@ public class RekisterointiService {
     }
 
     @Transactional
-    public long create(Rekisterointi rekisterointi, RequestContext requestContext) {
+    public UUID create(Rekisterointi rekisterointi, RequestContext requestContext) {
         Rekisterointi saved = rekisterointiRepository.save(rekisterointi);
-        String taskId = String.format("%s-%d", rekisterointiEmailTask.getName(), saved.id);
+        String taskId = taskId(rekisterointiEmailTask, saved.id);
         schedulerClient.schedule(rekisterointiEmailTask.instance(taskId, saved.id), Instant.now());
         eventPublisher.publishEvent(new CreatedEvent<>(requestContext, "rekisterointi", saved.id));
         LOGGER.info("Rekisteröinti luotu tunnuksella: {}", saved.id);
@@ -67,7 +68,7 @@ public class RekisterointiService {
 
     @Transactional
     public Rekisterointi resolve(String paattajaOid, PaatosDto paatosDto, RequestContext requestContext) {
-        Long rekisterointiId = paatosDto.rekisterointi;
+        UUID rekisterointiId = paatosDto.rekisterointi;
         Paatos paatos = new Paatos(paatosDto.hyvaksytty, LocalDateTime.now(), paattajaOid, paatosDto.perustelu);
         Rekisterointi rekisterointi = rekisterointiRepository.findById(rekisterointiId).orElseThrow(
                 () -> new InvalidInputException("Rekisteröintiä ei löydy, id: " + rekisterointiId));
@@ -104,8 +105,8 @@ public class RekisterointiService {
                 Instant.now());
     }
 
-    private String taskId(Task<Long> task, Long rekisterointiId) {
-        return String.format("%s-%d", task.getName(), rekisterointiId);
+    private String taskId(Task<UUID> task, UUID rekisterointiId) {
+        return String.format("%s-%s", task.getName(), rekisterointiId.toString());
     }
 
     @Transactional

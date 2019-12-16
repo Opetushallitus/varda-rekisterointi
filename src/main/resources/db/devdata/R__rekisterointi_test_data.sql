@@ -6,7 +6,7 @@ DELETE FROM rekisterointi;
 
 INSERT INTO rekisterointi (id, toimintamuoto, kunnat, sahkopostit)
  VALUES (
-     0,
+     uuid_generate_v4(),
      'vardatoimintamuoto_tm01',
      '{"Helsinki"}',
      '{"testi.yritys@testiyrit.ys"}'
@@ -14,7 +14,7 @@ INSERT INTO rekisterointi (id, toimintamuoto, kunnat, sahkopostit)
 
 INSERT INTO organisaatio (rekisterointi_id, ytunnus, alkupvm, yritysmuoto, tyypit, kotipaikka, maa, nimi, nimi_alkupvm)
  VALUES (
-     0,
+     (SELECT id FROM rekisterointi LIMIT 1),
      '0000000-0',
      CURRENT_DATE,
      'yritysmuoto_26',
@@ -29,7 +29,7 @@ INSERT INTO yhteystiedot (
     rekisterointi_id, puhelinnumero, sahkoposti, posti_katuosoite, posti_postinumero_uri, posti_postitoimipaikka,
     kaynti_katuosoite, kaynti_postinumero_uri, kaynti_postitoimipaikka
 ) VALUES (
-    0,
+    (SELECT id FROM rekisterointi LIMIT 1),
     '+358101234567',
     'testi.yritys@testiyrit.ys',
     'Haapaniemenkatu 14', 'posti_00530', 'kunta_091',
@@ -44,5 +44,5 @@ INSERT INTO kayttaja (id, etunimi, sukunimi, sahkoposti, asiointikieli, saatetek
      'testi.kayttaja@testiyrit.ys',
      'fi',
      null,
-     0
+     (SELECT id FROM rekisterointi LIMIT 1)
  );

@@ -73,7 +73,7 @@ export function tyhjaOrganisaatio(): Organisaatio {
             puhelinnumero: ''
         }
     }
-};
+}
 
 // kayttooikeus
 export type Kayttaja = {
@@ -85,11 +85,12 @@ export type Kayttaja = {
 }
 
 // varda-rekisterointi
+export type UUID = string;
 export type Rekisterointi = {
-    toimintamuoto: string,
-    kunnat: string[]
-    id: number
+    id: UUID,
     organisaatio: Organisaatio,
+    toimintamuoto: string,
+    kunnat: string[],
     sahkopostit: string[],
     kayttaja: Kayttaja
 }
