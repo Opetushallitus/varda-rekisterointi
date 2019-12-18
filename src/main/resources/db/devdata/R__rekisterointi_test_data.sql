@@ -2,6 +2,7 @@ DELETE FROM paatos;
 DELETE FROM kayttaja;
 DELETE FROM yhteystiedot;
 DELETE FROM organisaatio;
+DELETE FROM rekisterointi_id_historia;
 DELETE FROM rekisterointi;
 
 INSERT INTO rekisterointi (id, toimintamuoto, kunnat, sahkopostit)
