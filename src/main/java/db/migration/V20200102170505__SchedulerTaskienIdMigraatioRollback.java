@@ -6,15 +6,14 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
-import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
-@Component
-public class V20191216100132__SchedulerTaskienIdMigraatio extends BaseJavaMigration {
+public class V20200102170505__SchedulerTaskienIdMigraatioRollback extends BaseJavaMigration {
+
 
     private static final String SELECT_REKISTEROINTI_ID_HISTORIA =
             "SELECT vanha_id, uusi_id FROM rekisterointi_id_historia";
@@ -28,26 +27,26 @@ public class V20191216100132__SchedulerTaskienIdMigraatio extends BaseJavaMigrat
     public void migrate(Context context) throws Exception {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(
                 new SingleConnectionDataSource(context.getConnection(), true));
-        Map<Long, UUID> idMap = idMap(jdbcTemplate);
+        Map<UUID, Long> idMap = idMap(jdbcTemplate);
         prosessoiTaskit(jdbcTemplate, idMap);
     }
 
-    private Map<Long, UUID> idMap(JdbcTemplate jdbcTemplate) {
-        Map<Long, UUID> idMap = new HashMap<>();
+    private Map<UUID, Long> idMap(JdbcTemplate jdbcTemplate) {
+        Map<UUID, Long> idMap = new HashMap<>();
         jdbcTemplate.query(
                 SELECT_REKISTEROINTI_ID_HISTORIA,
-                new RekisterointiRowCallbackHandler(idMap)
+                new V20200102170505__SchedulerTaskienIdMigraatioRollback.RekisterointiRowCallbackHandler(idMap)
         );
         return idMap;
     }
 
-    private void prosessoiTaskit(JdbcTemplate jdbcTemplate, Map<Long, UUID> idMap) {
+    private void prosessoiTaskit(JdbcTemplate jdbcTemplate, Map<UUID, Long> idMap) {
         final List<Object[]> argumentit = new ArrayList<>();
         jdbcTemplate.query(
                 SELECT_SCHEDULED_TASKS,
-                new ScheduledTaskRowMapper()).forEach(task -> {
-            Long vanhaId = deserialize(task.data);
-            UUID uusiId = idMap.get(vanhaId);
+                new V20200102170505__SchedulerTaskienIdMigraatioRollback.ScheduledTaskRowMapper()).forEach(task -> {
+            UUID vanhaId = deserialize(task.data);
+            Long uusiId = idMap.get(vanhaId);
             if (uusiId == null) {
                 throw new IllegalStateException("Rekisteröinnin uutta tunnistetta ei löydy, vanha tunniste: " + vanhaId);
             }
@@ -59,21 +58,21 @@ public class V20191216100132__SchedulerTaskienIdMigraatio extends BaseJavaMigrat
         );
     }
 
-    private Long deserialize(byte[] data) {
+    private UUID deserialize(byte[] data) {
         ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
         try {
             ObjectInput objectInput = new ObjectInputStream(byteStream);
-            return (Long) objectInput.readObject();
+            return (UUID) objectInput.readObject();
         } catch (IOException | ClassNotFoundException e) {
             throw new IllegalStateException("Rekisteröinnin tunnisteen lukeminen task datasta epäonnistui", e);
         }
     }
 
-    private byte[] serialize(UUID uuid) {
+    private byte[] serialize(Long id) {
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
         try {
             ObjectOutput objectOutput = new ObjectOutputStream(byteStream);
-            objectOutput.writeObject(uuid);
+            objectOutput.writeObject(id);
             objectOutput.flush();
             return byteStream.toByteArray();
         } catch (IOException e) {
@@ -83,16 +82,17 @@ public class V20191216100132__SchedulerTaskienIdMigraatio extends BaseJavaMigrat
 
     private static class RekisterointiRowCallbackHandler implements RowCallbackHandler {
 
-        private final Map<Long, UUID> idMap;
+        private final Map<UUID, Long> idMap;
 
-        private RekisterointiRowCallbackHandler(Map<Long, UUID> idMap) {
+        private RekisterointiRowCallbackHandler(Map<UUID, Long> idMap) {
             this.idMap = idMap;
         }
 
         @Override
         public void processRow(ResultSet resultSet) throws SQLException {
-            Long vanhaId = resultSet.getLong("vanha_id");
-            UUID uusiId = resultSet.getObject("uusi_id", UUID.class);
+            // uh oh, makes sense: vanha <-> uusi, koska alkuperäisen migraation uusi on tuleva vanha...
+            UUID vanhaId = resultSet.getObject("uusi_id", UUID.class);
+            Long uusiId = resultSet.getLong("vanha_id");
             idMap.put(vanhaId, uusiId);
         }
     }
@@ -108,14 +108,14 @@ public class V20191216100132__SchedulerTaskienIdMigraatio extends BaseJavaMigrat
         }
     }
 
-    private static class ScheduledTaskRowMapper implements RowMapper<ScheduledTask> {
+    private static class ScheduledTaskRowMapper implements RowMapper<V20200102170505__SchedulerTaskienIdMigraatioRollback.ScheduledTask> {
 
         @Override
-        public ScheduledTask mapRow(ResultSet resultSet, int i) throws SQLException {
+        public V20200102170505__SchedulerTaskienIdMigraatioRollback.ScheduledTask mapRow(ResultSet resultSet, int i) throws SQLException {
             String taskName = resultSet.getString("task_name");
             String taskInstance = resultSet.getString("task_instance");
             byte[] taskData = resultSet.getBytes("task_data");
-            return new ScheduledTask(taskName, taskInstance, taskData);
+            return new V20200102170505__SchedulerTaskienIdMigraatioRollback.ScheduledTask(taskName, taskInstance, taskData);
         }
 
 
