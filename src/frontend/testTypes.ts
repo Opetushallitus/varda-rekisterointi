@@ -1,6 +1,5 @@
 import {Kayttaja, Organisaatio, Osoite} from "./types";
 import {Rekisterointihakemus, Tila} from "./virkailija/rekisterointihakemus";
-import {v4 as uuid} from 'uuid';
 
 export const tyhjaOsoite: Osoite = {
     katuosoite: '',
@@ -43,7 +42,7 @@ export const dummyHakemus: Rekisterointihakemus = {
     kayttaja: dummyKayttaja,
     organisaatio: dummyOrganisaatio,
     toimintamuoto: 'päiväkoti',
-    id: uuid(),
+    id: 0,
     vastaanotettu: '14.11.2019 10:44',
     tila: Tila.KASITTELYSSA
 };

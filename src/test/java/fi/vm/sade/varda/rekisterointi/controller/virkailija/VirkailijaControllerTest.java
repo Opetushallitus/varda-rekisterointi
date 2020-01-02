@@ -20,7 +20,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 
 import static fi.vm.sade.varda.rekisterointi.controller.virkailija.WithMockVirkailijaUser.MOCK_VIRKAILIJA_OID;
 import static org.junit.Assert.assertEquals;
@@ -38,14 +37,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class VirkailijaControllerTest {
 
     private static final PaatosDto TESTI_PAATOS_DTO = new PaatosDto(
-            UUID.randomUUID(),
+            1L,
             true,
             "Ihan okei."
     );
     private static final PaatosBatch TESTI_PAATOS_BATCH = new PaatosBatch(
             true,
             "Tosi kiva!",
-            List.of(UUID.randomUUID())
+            List.of(1L)
     );
 
     @Autowired

@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.UUID;
 
 @Service
 @AllArgsConstructor
@@ -27,11 +26,11 @@ public class RekisterointiFinalizer {
     private final VardaKayttajaFinalizer vardaKayttajaFinalizer;
     private final SchedulerClient schedulerClient;
     @Qualifier("kutsuKayttajaTask")
-    private final Task<UUID> kutsuKayttajaTask;
+    private final Task<Long> kutsuKayttajaTask;
     @Qualifier("paatosEmailTask")
-    private final Task<UUID> paatosEmailTask;
+    private final Task<Long> paatosEmailTask;
 
-    public void luoTaiPaivitaOrganisaatio(UUID rekisterointiId) {
+    public void luoTaiPaivitaOrganisaatio(Long rekisterointiId) {
         Rekisterointi rekisterointi = lataaRekisterointi(rekisterointiId);
         String oid = vardaOrganisaatioFinalizer.luoTaiPaivitaOrganisaatio(rekisterointi);
         if (rekisterointi.organisaatio.oid == null) {
@@ -44,23 +43,23 @@ public class RekisterointiFinalizer {
         );
     }
 
-    public void kutsuKayttaja(UUID rekisterointiId) {
+    public void kutsuKayttaja(Long rekisterointiId) {
         Rekisterointi rekisterointi = lataaRekisterointi(rekisterointiId);
         vardaKayttajaFinalizer.kutsuKayttaja(rekisterointi);
         ajastaPaatosEmail(rekisterointiId);
     }
 
-    private Rekisterointi lataaRekisterointi(UUID rekisterointiId) {
+    private Rekisterointi lataaRekisterointi(Long rekisterointiId) {
         return rekisterointiRepository.findById(rekisterointiId).orElseThrow(
                 () -> new InvalidInputException("Rekisteröintiä ei löydy, id: " + rekisterointiId)
         );
     }
 
-    private String taskId(Task<UUID> task, UUID rekisterointiId) {
-        return String.format("%s-%s", task.getName(), rekisterointiId.toString());
+    private String taskId(Task<Long> task, Long rekisterointiId) {
+        return String.format("%s-%d", task.getName(), rekisterointiId);
     }
 
-    private void ajastaPaatosEmail(UUID rekisterointiId) {
+    private void ajastaPaatosEmail(Long rekisterointiId) {
         schedulerClient.schedule(
                 paatosEmailTask.instance(taskId(paatosEmailTask, rekisterointiId), rekisterointiId),
                 Instant.now()

@@ -85,9 +85,8 @@ export type Kayttaja = {
 }
 
 // varda-rekisterointi
-export type UUID = string;
 export type Rekisterointi = {
-    id: UUID,
+    id: number
     organisaatio: Organisaatio,
     toimintamuoto: string,
     kunnat: string[],

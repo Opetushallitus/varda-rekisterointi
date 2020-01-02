@@ -12,14 +12,14 @@ import ModalHeader from "@opetushallitus/virkailija-ui-components/ModalHeader"
 import Divider from "@opetushallitus/virkailija-ui-components/Divider";
 import {Rekisterointihakemus} from "./rekisterointihakemus";
 import {hasLength} from "../StringUtils";
-import {Organisaatio, UUID} from "../types";
+import {Organisaatio} from "../types";
 import styles from './PaatosVahvistus.module.css';
 
 const paatoksetBatchUrl = "/varda-rekisterointi/virkailija/api/paatokset/batch";
 
 type PaatosBatch = {
     hyvaksytty: boolean
-    hakemukset: UUID[],
+    hakemukset: number[],
     perustelu?: string
 }
 

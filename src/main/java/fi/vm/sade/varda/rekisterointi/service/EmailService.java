@@ -31,7 +31,7 @@ public class EmailService {
     private final KayttooikeusClient kayttooikeusClient;
     private final OrganisaatioClient organisaatioClient;
 
-    public void lahetaRekisterointiEmail(UUID id) {
+    public void lahetaRekisterointiEmail(long id) {
         rekisterointiRepository.findById(id).ifPresent(rekisterointi -> {
             lahetaRekisterointiEmail(rekisterointi);
             lahetaRekisterointiEmail(rekisterointi.kayttaja);
@@ -71,7 +71,7 @@ public class EmailService {
         viestintaClient.save(email, false);
     }
 
-    public void lahetaPaatosEmail(UUID id) {
+    public void lahetaPaatosEmail(long id) {
         rekisterointiRepository.findById(id).ifPresent(rekisterointi -> {
             String organisaatioNimi = rekisterointi.organisaatio.ytjNimi.nimi;
             EmailDto email = EmailDto.builder()

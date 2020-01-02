@@ -11,14 +11,13 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.Set;
-import java.util.UUID;
 
 @EqualsAndHashCode
 @AllArgsConstructor
 public class Rekisterointi {
 
     @With @Id
-    public final UUID id;
+    public final Long id;
 
     @With @NotNull @Column("rekisterointi_id")
     public final Organisaatio organisaatio;
