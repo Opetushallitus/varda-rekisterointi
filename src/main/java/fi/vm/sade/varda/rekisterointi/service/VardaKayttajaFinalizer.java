@@ -47,7 +47,7 @@ public class VardaKayttajaFinalizer {
                 kayttooikeusRyhmaId(rekisterointi.toimintamuoto)
         );
         LOGGER.info(
-                "Kutsuttu käyttäjä {} organisaatioon {}.", rekisterointi.kayttaja.id, rekisterointi.organisaatio.oid);
+                "Kutsuttu käyttäjä organisaatioon {}.", rekisterointi.organisaatio.oid);
     }
 
     private Long kayttooikeusRyhmaId(String toimintamuoto) {

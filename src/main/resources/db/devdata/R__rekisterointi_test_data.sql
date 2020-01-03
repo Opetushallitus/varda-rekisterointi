@@ -37,9 +37,8 @@ INSERT INTO yhteystiedot (
     'Haapaniemenkatu 14', 'posti_00530', 'kunta_091'
 );
 
-INSERT INTO kayttaja (id, etunimi, sukunimi, sahkoposti, asiointikieli, saateteksti, rekisterointi)
+INSERT INTO kayttaja (etunimi, sukunimi, sahkoposti, asiointikieli, saateteksti, rekisterointi)
  VALUES (
-     0,
      'Testi',
      'Käyttäjä',
      'testi.kayttaja@testiyrit.ys',

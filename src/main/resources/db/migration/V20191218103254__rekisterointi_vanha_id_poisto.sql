@@ -1,5 +1,6 @@
 ALTER TABLE kayttaja DROP CONSTRAINT kayttaja_pkey;
 ALTER TABLE kayttaja DROP COLUMN rekisterointi;
+ALTER TABLE kayttaja DROP COLUMN id; -- käyttämätön, tauluun viitataan rekisteröinnin tunnisteella
 ALTER TABLE kayttaja RENAME COLUMN uusi_rekisterointi TO rekisterointi;
 ALTER TABLE kayttaja ADD PRIMARY KEY (rekisterointi);
 

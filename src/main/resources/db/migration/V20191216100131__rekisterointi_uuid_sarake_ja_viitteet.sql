@@ -21,5 +21,3 @@ ALTER TABLE organisaatio ADD COLUMN uusi_rekisterointi_id uuid UNIQUE;
 UPDATE organisaatio AS o SET uusi_rekisterointi_id = (SELECT r.uusi_id FROM rekisterointi AS r WHERE r.id = o.rekisterointi_id);
 ALTER TABLE organisaatio ALTER COLUMN uusi_rekisterointi_id SET NOT NULL;
 ALTER TABLE organisaatio ADD CONSTRAINT organisaatio_rekisterointi_uuid_fk FOREIGN KEY (uusi_rekisterointi_id) REFERENCES rekisterointi (uusi_id);
-
-

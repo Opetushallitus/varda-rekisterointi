@@ -32,7 +32,7 @@ public class Rekisterointi {
     @NotEmpty
     public final Set<@Email String> sahkopostit;
 
-    @With @NotNull
+    @With @NotNull @Column("rekisterointi")
     public final Kayttaja kayttaja;
 
     @NotNull

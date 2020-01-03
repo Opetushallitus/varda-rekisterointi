@@ -12,7 +12,7 @@ public interface RekisterointiRepository extends CrudRepository<Rekisterointi, U
     // toistaiseksi Spring Data JDBC ei loihdi automaattisesti metodeista queryjä
     // huom. referoidun taulun sarakkeille annettava selectissä etuliite "<taulunimi>_"
     String REKISTEROINTI_SELECT =
-            "SELECT r.id, r.kunnat, o.ytunnus AS organisaatio_ytunnus, o.oid AS organisaatio_oid, " +
+            "SELECT r.id, o.ytunnus AS organisaatio_ytunnus, o.oid AS organisaatio_oid, " +
             "o.rekisterointi_id AS organisaatio_rekisterointi_id, o.alkupvm AS organisaatio_alkupvm, " +
             "o.nimi AS organisaatio_nimi, o.nimi_kieli AS organisaatio_nimi_kieli, " +
             "o.nimi_alkupvm AS organisaatio_nimi_alkupvm, o.yritysmuoto AS organisaatio_yritysmuoto, " +
@@ -27,13 +27,10 @@ public interface RekisterointiRepository extends CrudRepository<Rekisterointi, U
             "y.kaynti_katuosoite AS organisaatio_yhteystiedot_kaynti_katuosoite, " +
             "y.kaynti_postinumero_uri AS organisaatio_yhteystiedot_kaynti_postinumero_uri, " +
             "y.kaynti_postitoimipaikka AS organisaatio_yhteystiedot_kaynti_postitoimipaikka, " +
-            "r.toimintamuoto, r.sahkopostit, k.id AS kayttaja_id, k.etunimi AS kayttaja_etunimi, " +
+            "r.toimintamuoto, r.kunnat, r.sahkopostit, " +
+            "k.rekisterointi as kayttaja_rekisterointi, k.etunimi AS kayttaja_etunimi, " +
             "k.sukunimi AS kayttaja_sukunimi, k.sahkoposti AS kayttaja_sahkoposti, " +
             "k.asiointikieli AS kayttaja_asiointikieli, k.saateteksti AS kayttaja_saateteksti, " +
-            "r.vastaanotettu, r.tila, r.toimintamuoto, r.sahkopostit, " +
-            "k.id AS kayttaja_id, k.etunimi AS kayttaja_etunimi, k.sukunimi AS kayttaja_sukunimi, " +
-            "k.sahkoposti AS kayttaja_sahkoposti, k.asiointikieli AS kayttaja_asiointikieli, " +
-            "k.saateteksti AS kayttaja_saateteksti, " +
             "r.vastaanotettu, r.tila, " +
             "p.rekisterointi_id AS paatos_rekisterointi_id, p.hyvaksytty AS paatos_hyvaksytty, " +
             "p.paatetty AS paatos_paatetty, p.paattaja_oid AS paatos_paattaja_oid, p.perustelu AS paatos_perustelu " +

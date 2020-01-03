@@ -11,8 +11,6 @@ import javax.validation.constraints.NotNull;
 @Builder
 public class Kayttaja {
 
-    @With @Id
-    public final Long id;
     @NotNull
     public final String etunimi;
     @NotNull
