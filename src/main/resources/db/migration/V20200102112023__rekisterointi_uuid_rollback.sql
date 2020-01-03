@@ -1,6 +1,12 @@
--- lisätään sarakkeet vanhanmalliselle id:ille, populoidaan historiataulun pohjalta
-
+-- lisätään sarake vanhanmalliselle id:ille
 ALTER TABLE rekisterointi ADD COLUMN vanha_id BIGSERIAL UNIQUE;
+-- lisätään vanhanmalliset id:t uusille riveille
+WITH uudet_rivit AS (
+    SELECT nextval('rekisterointi_vanha_id_seq') AS vanha_id, id AS uusi_id
+    FROM rekisterointi
+    WHERE id NOT IN (SELECT uusi_id FROM rekisterointi_id_historia)
+) INSERT INTO rekisterointi_id_historia SELECT * FROM uudet_rivit;
+-- populoidaan vanha_id historiataulun pohjalta
 UPDATE rekisterointi AS r SET vanha_id = (SELECT h.vanha_id FROM rekisterointi_id_historia h WHERE h.uusi_id = r.id);
 
 ALTER TABLE kayttaja ADD COLUMN vanha_rekisterointi BIGINT UNIQUE;
