@@ -1,5 +1,7 @@
 -- lisätään sarake vanhanmalliselle id:ille
 ALTER TABLE rekisterointi ADD COLUMN vanha_id BIGSERIAL UNIQUE;
+-- varmistetaan, ettei tulee id-konflikteja
+SELECT setval('rekisterointi_vanha_id_seq', (SELECT max(vanha_id) FROM rekisterointi_id_historia));
 -- lisätään vanhanmalliset id:t uusille riveille
 WITH uudet_rivit AS (
     SELECT nextval('rekisterointi_vanha_id_seq') AS vanha_id, id AS uusi_id
