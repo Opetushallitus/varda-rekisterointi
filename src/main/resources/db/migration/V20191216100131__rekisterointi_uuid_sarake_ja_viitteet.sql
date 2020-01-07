@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 ALTER TABLE rekisterointi ADD COLUMN uusi_id uuid UNIQUE NOT NULL DEFAULT uuid_generate_v4();
 SELECT id AS vanha_id, uusi_id AS uusi_id INTO TABLE rekisterointi_id_historia FROM rekisterointi;
 ALTER TABLE rekisterointi_id_historia ADD CONSTRAINT rekisterointi_id_historia_rekisterointi_fk FOREIGN KEY (uusi_id) REFERENCES rekisterointi (uusi_id);
