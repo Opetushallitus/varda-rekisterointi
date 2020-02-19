@@ -1,3 +1,8 @@
 spring:
   flyway:
     locations: classpath:db/migration,classpath:db/devdata
+
+management:
+  endpoint:
+    health:
+      show-details: always
