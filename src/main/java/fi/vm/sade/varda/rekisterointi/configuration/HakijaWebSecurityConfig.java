@@ -20,11 +20,11 @@ import org.springframework.security.web.authentication.LoginUrlAuthenticationEnt
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.preauth.*;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 import javax.servlet.Filter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
@@ -52,17 +52,18 @@ public class HakijaWebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.headers().disable().csrf().disable();
         http.antMatcher(HAKIJA_PATH_CLOB).authorizeRequests()
                 .anyRequest().hasRole(HAKIJA_ROLE)
                 .and()
                 .addFilterBefore(hakijaAuthenticationProcessingFilter(), BasicAuthenticationFilter.class)
+                .csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                .and()
                 .exceptionHandling()
                 .authenticationEntryPoint(hakijaAuthenticationEntryPoint());
     }
 
     @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+    protected void configure(AuthenticationManagerBuilder auth) {
         auth.authenticationProvider(hakijaAuthenticationProvider());
     }
 
@@ -116,7 +117,7 @@ public class HakijaWebSecurityConfig extends WebSecurityConfigurerAdapter {
         }
 
         @Override
-        public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException, IOException {
+        public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
             String nationalIdentificationNumber = Optional.ofNullable(request.getHeader("nationalidentificationnumber"))
                     .or(() -> Optional.ofNullable(request.getParameter("hetu"))) // for easier development
                     .orElseThrow(() -> new PreAuthenticatedCredentialsNotFoundException("Unable to authenticate because required header doesn't exist"));

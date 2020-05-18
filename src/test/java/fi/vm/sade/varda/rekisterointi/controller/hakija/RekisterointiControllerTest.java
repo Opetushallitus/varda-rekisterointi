@@ -19,6 +19,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -42,10 +43,25 @@ public class RekisterointiControllerTest {
         MockHttpSession session = new MockHttpSession();
         session.setAttribute(Constants.SESSION_ATTRIBUTE_NAME_BUSINESS_ID, rekisterointi.organisaatio.ytunnus);
         mvc.perform(post(RekisterointiController.BASE_PATH)
+                .with(csrf())
                 .session(session)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(rekisterointiAsJson))
                 .andExpect(status().is3xxRedirection());
+    }
+
+    @Test
+    @WithMockUser(roles = "APP_VARDAREKISTEROINTI_HAKIJA")
+    public void forbiddenCsrfTokeninPuuttuessa() throws Exception {
+        Rekisterointi rekisterointi = TestiRekisterointi.validiRekisterointi();
+        String rekisterointiAsJson = objectMapper.writeValueAsString(rekisterointi);
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute(Constants.SESSION_ATTRIBUTE_NAME_BUSINESS_ID, rekisterointi.organisaatio.ytunnus);
+        mvc.perform(post(RekisterointiController.BASE_PATH)
+                .session(session)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(rekisterointiAsJson))
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -56,6 +72,7 @@ public class RekisterointiControllerTest {
         MockHttpSession session = new MockHttpSession();
         session.setAttribute(Constants.SESSION_ATTRIBUTE_NAME_BUSINESS_ID, rekisterointi.organisaatio.ytunnus);
         mvc.perform(post(RekisterointiController.BASE_PATH)
+                .with(csrf())
                 .session(session)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(rekisterointiAsJson))
@@ -75,6 +92,7 @@ public class RekisterointiControllerTest {
         String rekisterointiAsJson = objectMapper.writeValueAsString(rekisterointi);
 
         mvc.perform(post(RekisterointiController.BASE_PATH)
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(rekisterointiAsJson))
                 .andExpect(status().isBadRequest());
@@ -88,6 +106,7 @@ public class RekisterointiControllerTest {
         MockHttpSession session = new MockHttpSession();
         session.setAttribute(Constants.SESSION_ATTRIBUTE_NAME_BUSINESS_ID, "0101010-1");
         mvc.perform(post(RekisterointiController.BASE_PATH)
+                .with(csrf())
                 .session(session)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(rekisterointiAsJson))
