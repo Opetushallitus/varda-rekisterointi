@@ -15,6 +15,7 @@ public class PropertiesConfiguration {
     @Bean
     public OphProperties properties(Environment environment) {
         OphProperties properties = new OphProperties("/varda-rekisterointi-oph.properties");
+        properties.addDefault("url-oppija", environment.getRequiredProperty("varda-rekisterointi.url-oppija"));
         properties.addDefault("url-virkailija", environment.getRequiredProperty("varda-rekisterointi.url-virkailija"));
         properties.addDefault("url-tunnistus", environment.getRequiredProperty("varda-rekisterointi.url-tunnistus"));
         properties.addDefault("url-alb", environment.getRequiredProperty("varda-rekisterointi.url-alb"));

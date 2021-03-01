@@ -28,6 +28,7 @@ spring:
         username: {{ postgres_app_user }}
         password: {{ varda_rekisterointi_datasource_password }}
 varda-rekisterointi:
+    url-oppija: https://{{ host_oppija }}
     url-virkailija: https://{{ host_virkailija }}
     url-tunnistus: https://{{ host_tunnistus }}
     url-alb: {{ host_alb }}
